@@ -15,34 +15,14 @@ public class SudokuPuzzleValidator {
     }
 
     public static boolean isAValidGrid(final Integer[][] gridArr) {
+        Set<Integer> rowDuplicates = identifyRowDuplicates(gridArr);
+        Set<Integer> columnDuplicates = identifyColumnDuplicates(gridArr);
+        Set<Integer> blockDuplicates = identifyBlockDuplicates(gridArr);
 
-        // Validate Rows
-        List<Integer[]> grid = asList(gridArr);
-        Set<Integer> rowDuplicates = new HashSet<>();
+        return rowDuplicates.isEmpty() && columnDuplicates.isEmpty() && blockDuplicates.isEmpty();
+    }
 
-        grid.forEach(numbersInRowArr -> {
-            List<Integer> numbersInRow = asList(numbersInRowArr);
-            rowDuplicates.addAll(numbersInRow.stream()
-                    .filter(Objects::nonNull)
-                    .filter(num -> Collections.frequency(numbersInRow, num) > 1)
-                    .collect(Collectors.toSet()));
-        });
-
-        // Validate Columns
-        // x = x coordinate y = y coordinate of grid
-        Set<Integer> columnDuplicates = new HashSet<>();
-        for (int y = 0; y < gridArr.length; y++) {
-            List<Integer> numbersInColumn = new ArrayList<>();
-            for (int x = 0; x < gridArr.length; x++) {
-                numbersInColumn.add(gridArr[x][y]);
-            }
-            columnDuplicates.addAll(numbersInColumn.stream()
-                    .filter(Objects::nonNull)
-                    .filter(num -> Collections.frequency(numbersInColumn, num) > 1)
-                    .collect(Collectors.toSet()));
-        }
-
-
+    private static Set<Integer> identifyBlockDuplicates(Integer[][] gridArr) {
         // Validate Block
         // 0,0 0,1 0,2  0,3 0,4 0,5
         // 1,0 1,1 1,2  1,3 1,4 1,5
@@ -54,14 +34,43 @@ public class SudokuPuzzleValidator {
             blockCoordinates.forEach(blockCoordinate -> {
                 numbersInBlock.add(gridArr[blockCoordinate.getX()][blockCoordinate.getY()]);
             });
-            blockDuplicates.addAll(numbersInBlock.stream()
-                        .filter(Objects::nonNull)
-                    .filter(num -> Collections.frequency(numbersInBlock, num) > 1)
-                    .collect(Collectors.toSet()));
+            blockDuplicates.addAll(duplicatesInList(numbersInBlock));
             numbersInBlock.clear();
         });
+        return blockDuplicates;
+    }
 
-        return rowDuplicates.isEmpty() && columnDuplicates.isEmpty() && blockDuplicates.isEmpty();
+    private static Set<Integer> identifyColumnDuplicates(Integer[][] gridArr) {
+        // Validate Columns
+        // x = x coordinate y = y coordinate of grid
+        Set<Integer> columnDuplicates = new HashSet<>();
+        for (int y = 0; y < gridArr.length; y++) {
+            List<Integer> numbersInColumn = new ArrayList<>();
+            for (int x = 0; x < gridArr.length; x++) {
+                numbersInColumn.add(gridArr[x][y]);
+            }
+            columnDuplicates.addAll(duplicatesInList(numbersInColumn));
+        }
+        return columnDuplicates;
+    }
+
+    private static Set<Integer> identifyRowDuplicates(Integer[][] gridArr) {
+        // Validate Rows
+        List<Integer[]> grid = asList(gridArr);
+        Set<Integer> rowDuplicates = new HashSet<>();
+
+        grid.forEach(numbersInRowArr -> {
+            List<Integer> numbersInRow = asList(numbersInRowArr);
+            rowDuplicates.addAll(duplicatesInList(numbersInRow));
+        });
+        return rowDuplicates;
+    }
+
+    private static Set<Integer> duplicatesInList(List<Integer> inputs) {
+        return inputs.stream()
+                .filter(Objects::nonNull)
+                .filter(num -> Collections.frequency(inputs, num) > 1)
+                .collect(Collectors.toSet());
     }
 
     public static boolean isCompleteGrid(final Integer[][] gridArr) {
